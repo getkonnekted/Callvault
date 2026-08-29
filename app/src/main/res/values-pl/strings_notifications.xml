@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Auto-completed notification translations. -->
+<resources>
+    <string name="notif_call_monitor_channel">Monitorowanie połączeń</string>
+    <string name="notif_pairing_action_enter_code">Wprowadź kod parowania</string>
+    <string name="notif_pairing_action_stop">Zatrzymaj</string>
+    <string name="notif_pairing_channel">Parowanie ADB</string>
+    <string name="notif_pairing_failed_title">Parowanie nie powiodło się</string>
+    <string name="notif_pairing_found_text">Wprowadź 6-cyfrowy kod parowania.</string>
+    <string name="notif_pairing_found_title">Znaleziono usługę parowania</string>
+    <string name="notif_pairing_remote_input_label">Kod parowania</string>
+    <string name="notif_pairing_searching_text">Otwórz na telefonie okno „Sparuj urządzenie za pomocą kodu parowania”.</string>
+    <string name="notif_pairing_searching_title">Wyszukiwanie usługi parowania…</string>
+    <string name="notif_pairing_success_text">Debugowanie bezprzewodowe sparowane. Dotknij, aby dokończyć konfigurację CallVault.</string>
+    <string name="notif_pairing_success_title">Sparowano ✓</string>
+    <string name="notif_pairing_waiting_wd_text">Włącz Debugowanie bezprzewodowe, aby rozpocząć parowanie.</string>
+    <string name="notif_pairing_waiting_wd_title">Oczekiwanie na Debugowanie bezprzewodowe…</string>
+    <string name="notif_pairing_working_text">Konfigurowanie CallVault. Potrwa to kilka sekund.</string>
+    <string name="notif_pairing_working_title">Parowanie…</string>
+    <string name="notif_readiness_channel">Gotowość rejestratora połączeń</string>
+    <string name="notif_readiness_ready_text">Rejestrator jest połączony.</string>
+    <string name="notif_readiness_ready_title">Gotowy do nagrywania połączeń</string>
+    <string name="notif_readiness_reboot_ready_text">Nasłuchiwanie połączeń po ponownym uruchomieniu.</string>
+    <string name="notif_readiness_starting_text">Łączenie rejestratora — połączenia nie będą nagrywane, dopóki proces się nie zakończy.</string>
+    <string name="notif_readiness_starting_title">Uruchamianie rejestratora połączeń…</string>
+    <string name="notif_startup_channel">Uruchamianie</string>
+    <string name="notif_startup_preparing">Przygotowywanie rejestratora połączeń…</string>
+    <string name="notif_usb_check_unavailable">Jeśli to się nie zakończy, ustaw USB na \"Tylko ładowanie\" w Ustawienia → Niezawodność — w niektórych telefonach tryb USB z transmisją danych uniemożliwia połączenie rejestratora.</string>
+    <string name="notif_usb_lock_warning">Zablokowanie ekranu podczas rozmowy może zatrzymać nagrywanie. Ustaw USB na „Tylko ładowanie“ w Ustawienia → Niezawodność.</string>
+    <string name="update_notif_available_text">Otwórz aplikację i dotknij Aktualizuj, aby ją zainstalować.</string>
+    <string name="update_notif_available_title">Dostępny jest CallVault %1$s</string>
+    <string name="update_notif_channel">Aktualizacje aplikacji</string>
+    <string name="update_notif_downloading_title">Pobieranie aktualizacji…</string>
+    <string name="update_notif_failure_download_text">Nie udało się pobrać aktualizacji. Dotknij, aby pobrać ją z GitHuba.</string>
+    <string name="update_notif_failure_install_text">Nie udało się zainstalować aktualizacji. Dotknij, aby pobrać ją z GitHuba.</string>
+    <string name="update_notif_failure_title">Aktualizacja nie powiodła się</string>
+    <string name="update_notif_failure_verify_text">Pobrana aktualizacja nie przeszła kontroli bezpieczeństwa i została odrzucona. Dotknij, aby pobrać ją z GitHuba.</string>
+    <string name="update_notif_installing_title">Instalowanie aktualizacji…</string>
+    <string name="update_notif_success_text">CallVault ma teraz wersję %1$s.</string>
+    <string name="update_notif_success_title">Aktualizacja zainstalowana</string>
+</resources>

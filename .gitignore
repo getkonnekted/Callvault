@@ -1,0 +1,22 @@
+# Build outputs
+build/
+*.apk
+*.keystore
+.gradle/
+local.properties
+.idea/
+.DS_Store
+
+# graphify knowledge-graph output (build artifact, not published)
+graphify-out/
+
+# internal build/planning notes (not published)
+docs/superpowers/
+.gstack/
+
+# App signing keystore — the release identity; keep local, back up separately, NEVER commit.
+/signing/
+
+# Native (CMake/NDK) build cache
+.cxx/
+app/.cxx/

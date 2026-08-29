@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Auto-completed notification translations. -->
+<resources>
+    <string name="notif_call_monitor_channel">Theo dõi cuộc gọi</string>
+    <string name="notif_pairing_action_enter_code">Nhập mã ghép nối</string>
+    <string name="notif_pairing_action_stop">Dừng</string>
+    <string name="notif_pairing_channel">Ghép nối ADB</string>
+    <string name="notif_pairing_failed_title">Ghép nối thất bại</string>
+    <string name="notif_pairing_found_text">Nhập mã ghép nối gồm 6 chữ số.</string>
+    <string name="notif_pairing_found_title">Đã tìm thấy dịch vụ ghép nối</string>
+    <string name="notif_pairing_remote_input_label">Mã ghép nối</string>
+    <string name="notif_pairing_searching_text">Mở hộp thoại \'Ghép nối thiết bị bằng mã ghép nối\' trên điện thoại.</string>
+    <string name="notif_pairing_searching_title">Đang tìm dịch vụ ghép nối…</string>
+    <string name="notif_pairing_success_text">Đã ghép nối Gỡ lỗi không dây. Nhấn để hoàn tất thiết lập CallVault.</string>
+    <string name="notif_pairing_success_title">Đã ghép nối ✓</string>
+    <string name="notif_pairing_waiting_wd_text">Bật Gỡ lỗi không dây để bắt đầu ghép nối.</string>
+    <string name="notif_pairing_waiting_wd_title">Đang chờ Gỡ lỗi không dây…</string>
+    <string name="notif_pairing_working_text">Đang thiết lập CallVault. Quá trình này mất vài giây.</string>
+    <string name="notif_pairing_working_title">Đang ghép nối…</string>
+    <string name="notif_readiness_channel">Trạng thái sẵn sàng ghi âm cuộc gọi</string>
+    <string name="notif_readiness_ready_text">Trình ghi âm đã được kết nối.</string>
+    <string name="notif_readiness_ready_title">Sẵn sàng ghi âm cuộc gọi</string>
+    <string name="notif_readiness_reboot_ready_text">Đang chờ cuộc gọi sau khi khởi động lại.</string>
+    <string name="notif_readiness_starting_text">Đang kết nối trình ghi âm — cuộc gọi sẽ không được ghi cho đến khi hoàn tất.</string>
+    <string name="notif_readiness_starting_title">Trình ghi âm cuộc gọi đang khởi động…</string>
+    <string name="notif_startup_channel">Khởi động</string>
+    <string name="notif_startup_preparing">Đang chuẩn bị trình ghi âm cuộc gọi…</string>
+    <string name="notif_usb_check_unavailable">Nếu quá trình này không hoàn tất, hãy đặt USB thành \"Chỉ sạc\" trong Cài đặt → Độ tin cậy — trên một số điện thoại, chế độ USB truyền dữ liệu khiến trình ghi âm không kết nối được.</string>
+    <string name="notif_usb_lock_warning">Khóa màn hình khi đang gọi có thể dừng ghi âm. Đặt USB thành "Chỉ sạc" trong Cài đặt → Độ tin cậy.</string>
+    <string name="update_notif_available_text">Mở ứng dụng và nhấn Cập nhật để cài đặt.</string>
+    <string name="update_notif_available_title">Đã có CallVault %1$s</string>
+    <string name="update_notif_channel">Cập nhật ứng dụng</string>
+    <string name="update_notif_downloading_title">Đang tải bản cập nhật…</string>
+    <string name="update_notif_failure_download_text">Không thể tải bản cập nhật. Nhấn để tải từ GitHub.</string>
+    <string name="update_notif_failure_install_text">Không thể cài đặt bản cập nhật. Nhấn để tải từ GitHub.</string>
+    <string name="update_notif_failure_title">Cập nhật thất bại</string>
+    <string name="update_notif_failure_verify_text">Bản cập nhật đã tải không vượt qua kiểm tra bảo mật và đã bị loại bỏ. Nhấn để tải từ GitHub.</string>
+    <string name="update_notif_installing_title">Đang cài đặt bản cập nhật…</string>
+    <string name="update_notif_success_text">CallVault hiện là phiên bản %1$s.</string>
+    <string name="update_notif_success_title">Đã cài đặt bản cập nhật</string>
+</resources>

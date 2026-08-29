@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Brazilian Portuguese. Do not hand-edit placeholders (%1$s etc.). -->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="notif_call_monitor_channel">Monitor de chamadas</string>
+    <string name="notif_pairing_action_enter_code">Digitar o código de pareamento</string>
+    <string name="notif_pairing_action_stop">Parar</string>
+    <string name="notif_pairing_channel">Pareamento ADB</string>
+    <string name="notif_pairing_failed_title">Falha no pareamento</string>
+    <string name="notif_pairing_found_text">Digite o código de pareamento de 6 dígitos.</string>
+    <string name="notif_pairing_found_title">Serviço de pareamento encontrado</string>
+    <string name="notif_pairing_remote_input_label">Código de pareamento</string>
+    <string name="notif_pairing_searching_text">Abra a caixa de diálogo \'Parear dispositivo com código de pareamento\' do celular.</string>
+    <string name="notif_pairing_searching_title">Procurando o serviço de pareamento…</string>
+    <string name="notif_pairing_success_text">Depuração sem fio pareada. Toque para terminar de configurar o CallVault.</string>
+    <string name="notif_pairing_success_title">Pareado ✓</string>
+    <string name="notif_pairing_waiting_wd_text">Ative a Depuração sem fio para iniciar o pareamento.</string>
+    <string name="notif_pairing_waiting_wd_title">Aguardando a Depuração sem fio…</string>
+    <string name="notif_pairing_working_text">Configurando o CallVault. Isso leva alguns segundos.</string>
+    <string name="notif_pairing_working_title">Pareando…</string>
+    <string name="notif_readiness_channel">Prontidão do gravador de chamadas</string>
+    <string name="notif_readiness_ready_text">O gravador está conectado.</string>
+    <string name="notif_readiness_ready_title">Pronto para gravar chamadas</string>
+    <string name="notif_readiness_reboot_ready_text">Aguardando chamadas após a reinicialização.</string>
+    <string name="notif_readiness_starting_text">Conectando o gravador — as chamadas não serão gravadas até isso terminar.</string>
+    <string name="notif_readiness_starting_title">Iniciando o gravador de chamadas…</string>
+    <string name="notif_startup_channel">Inicialização</string>
+    <string name="notif_startup_preparing">Preparando o gravador de chamadas…</string>
+    <string name="notif_usb_check_unavailable">Se isso não terminar, defina o USB como \"Somente carregar\" em Configurações → Confiabilidade — em alguns celulares um modo USB de dados impede o gravador de conectar.</string>
+    <string name="notif_usb_lock_warning">Bloquear a tela durante uma chamada pode interromper a gravação. Defina o USB como \"Sem transferência de dados\" em Configurações → Confiabilidade.</string>
+    <string name="update_notif_available_text">Abra o app e toque em Atualizar para instalar.</string>
+    <string name="update_notif_available_title">O CallVault %1$s está disponível</string>
+    <string name="update_notif_channel">Atualizações do app</string>
+    <string name="update_notif_downloading_title">Baixando a atualização…</string>
+    <string name="update_notif_failure_download_text">Não foi possível baixar a atualização. Toque para obtê-la no GitHub.</string>
+    <string name="update_notif_failure_install_text">Não foi possível instalar a atualização. Toque para obtê-la no GitHub.</string>
+    <string name="update_notif_failure_title">Falha na atualização</string>
+    <string name="update_notif_failure_verify_text">A atualização baixada não passou na verificação de segurança e foi descartada. Toque para obtê-la no GitHub.</string>
+    <string name="update_notif_installing_title">Instalando a atualização…</string>
+    <string name="update_notif_success_text">O CallVault agora está na versão %1$s.</string>
+    <string name="update_notif_success_title">Atualização instalada</string>
+</resources>

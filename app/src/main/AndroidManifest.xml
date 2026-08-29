@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ CallVault: FOSS call recording, self-contained over embedded ADB
+  ~ Copyright (C) 2026-present The CallVault Authors
+  ~ This software is licensed under the GNU General Public License v3 or later,
+  ~ with additional terms as permitted under Section 7.
+  ~ The full license text is available in the LICENSE file at the root of this project.
+  ~ This software is distributed WITHOUT ANY WARRANTY; without even the implied
+  ~ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  -->
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Boot -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Wireless debugging / ADB configuration -->
+    <uses-permission
+        android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+
+    <!-- Notifications -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Network / updater -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+    <!-- Telephony -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_CALL_LOG"
+        tools:ignore="SmsAndCallLogPolicy" />
+
+    <!-- Contacts -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+
+    <!-- Audio recording -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!-- Battery optimization -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <!-- Haptics -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- Recording foreground services -->
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE"
+        tools:ignore="ForegroundServicesPolicy" />
+
+    <!-- Android 14+ -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+
+    <!-- Android 11+ -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
+    <!--
+        Package visibility.
+
+        Allows CallVault to discover launcher applications so that the
+        VoIP recording UI can resolve the calling application's icon/label.
+    -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
+    <application
+        android:name=".CallVaultApplication"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.CallVault">
+
+        <!-- Main UI -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.CallVault">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.APPLICATION_PREFERENCES" />
+
+                <category android:name="android.intent.category.NOTIFICATION_PREFERENCES" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity>
+
+        <!--
+            Foreground service used for ADB wireless-debugging pairing.
+        -->
+        <service
+            android:name=".integrations.adb.AdbPairingService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="ADB wireless-debugging pairing." />
+
+        </service>
+
+        <!-- AndroidX locale support -->
+        <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+
+        </service>
+
+        <!--
+            Main recording foreground service.
+
+            RECORD_AUDIO is declared above.
+            The actual call-audio capture is implemented by the recording
+            code/daemon, not by the manifest itself.
+        -->
+        <service
+            android:name=".services.recording.RecordingForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync|specialUse">
+
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Call recording: captures audio during phone calls." />
+
+        </service>
+
+        <!-- Telephony state receiver -->
+        <receiver
+            android:name=".services.call.PhoneStateReceiver"
+            android:enabled="true"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.PHONE_STATE" />
+            </intent-filter>
+
+        </receiver>
+
+        <!-- Re-anchor retention scheduling after timezone/clock changes -->
+        <receiver
+            android:name=".services.boot.RetentionTimezoneReceiver"
+            android:enabled="true"
+            android:exported="false">
+
+            <intent-filter>
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+            </intent-filter>
+
+        </receiver>
+
+        <!-- Update installer -->
+        <receiver
+            android:name=".system.updates.UpdateInstallReceiver"
+            android:enabled="true"
+            android:exported="false">
+
+            <intent-filter>
+                <action android:name="com.baba.callvault.UPDATE_INSTALL_STATUS" />
+            </intent-filter>
+
+        </receiver>
+
+        <!-- Update completion -->
+        <receiver
+            android:name=".system.updates.UpdatePackageReplacedReceiver"
+            android:enabled="true"
+            android:exported="false">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+
+        </receiver>
+
+        <!-- Boot -->
+        <receiver
+            android:name=".services.boot.BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+
+        </receiver>
+
+        <!--
+            Binder channel used by the privileged recorder daemon.
+
+            The provider is intentionally exported because the non-app
+            shell-UID recorder daemon must be able to deliver its Binder.
+        -->
+        <provider
+            android:name=".server.RecorderBinderProvider"
+            android:authorities="com.baba.callvault.recorder"
+            android:enabled="true"
+            android:exported="true" />
+
+        <!-- FileProvider for diagnostic logs -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+
+        </provider>
+
+        <!--
+            Foreground service used to reconnect ADB after boot.
+        -->
+        <service
+            android:name=".services.boot.AdbConnectionService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Re-establish ADB wireless-debugging connection after boot." />
+
+        </service>
+
+        <!--
+            Post-boot call monitor.
+
+            Keeps a live telephony listener for a bounded period after boot
+            so the first call can be detected reliably.
+        -->
+        <service
+            android:name=".services.call.CallMonitorService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Call recording: listen for call state after reboot to record reliably." />
+
+        </service>
+
+        <!--
+            Persistent recorder-daemon keep-alive.
+
+            Keeps the privileged recorder daemon warm so call capture can
+            start immediately when a call begins.
+        -->
+        <service
+            android:name=".services.recording.DaemonKeepAliveService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Call recording: keep the privileged recorder daemon warm so calls are captured instantly." />
+
+        </service>
+
+    </application>
+
+</manifest>

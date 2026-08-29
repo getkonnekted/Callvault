@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  CallVault: FOSS call recording, self-contained over embedded ADB
+  Copyright (C) 2026-present The CallVault Authors
+  Strings added for the Signal redesign of the Home screen. Kept in a separate
+  resources file to avoid conflicts with parallel work on strings.xml.
+-->
+<resources>
+    <!-- Hero status card -->
+    <string name="home_hero_status_label">Status</string>
+    <string name="home_hero_pill_ready">Active</string>
+    <string name="home_hero_pill_not_paired">Action needed</string>
+    <string name="home_hero_pill_no_folder">Action needed</string>
+    <string name="home_hero_pill_dev_options_off">Recording broken</string>
+    <string name="home_hero_pill_update_regrant">Action needed</string>
+    <string name="home_support_pill">Support</string>
+    <string name="home_usb_advisory_title">Recording may stop on screen lock</string>
+    <string name="home_usb_advisory_text">USB is set to a data mode. Tap to set it to Charging only.</string>
+    <string name="home_usb_advisory_fix">Fix</string>
+
+    <!-- Recordings section -->
+    <string name="home_recordings_count">%1$d saved</string>
+    <string name="home_recordings_empty_title">No recordings yet</string>
+    <string name="home_recordings_empty_hint">When CallVault records a call, it shows up here. Make or take a call to get started.</string>
+
+    <!-- Row content descriptions -->
+    <string name="home_play_recording">Play recording</string>
+    <string name="home_update_banner_title">Update available: %1$s</string>
+    <string name="home_update_banner_text">A new version is ready to download from GitHub.</string>
+    <string name="home_update_banner_button">Update</string>
+    <string name="home_update_banner_downloading">Downloading… %1$d%%</string>
+    <string name="home_update_banner_installing">Installing…</string>
+    <string name="home_updated_banner_text">CallVault updated to %1$s</string>
+    <string name="home_whatsnew_title">What\'s new</string>
+    <string name="home_whatsnew_body">• Recording now recovers by itself if it ever gets stuck\n• Home tells you when recording is down, instead of staying quiet\n• A phone call is no longer mistaken for an app call</string>
+    <string name="home_whatsnew_offline_cta">Turn on off-Wi-Fi recording</string>
+    <string name="home_whatsnew_offline_enabled">Offline recording enabled.</string>
+    <string name="home_whatsnew_offline_failed">Couldn\'t enable — connect to Wi-Fi once, then try from Settings.</string>
+    <string name="home_whatsnew_offline_enabling">Enabling off-Wi-Fi recording…</string>
+    <string name="home_whatsnew_resilient_title">New: Resilient recording</string>
+    <string name="home_whatsnew_resilient_body">Makes call recording more resistant to interruptions.\n\nAndroid can stop CallVault\'s background helper at any time. With this on, a recording already in progress is no longer affected when that happens.\n\nOff by default — you can also turn it on later in Settings ▸ Reliability.</string>
+    <string name="home_whatsnew_resilient_cta">Turn it on</string>
+    <string name="home_whatsnew_resilient_enabled">Resilient recording is on. A recording already in progress is no longer affected if Android stops CallVault\'s background helper.</string>
+
+    <!-- Post-update note: one entry per release, newest first. Keep in sync with CHANGELOG.md. -->
+    <string name="home_whatsnew_settings_cta">Open Settings</string>
+    <string name="whatsnew_153_title">Your setup, checked by your own calls</string>
+    <string name="whatsnew_155_title">Settings in a panel, and calls that record more reliably</string>
+    <string name="whatsnew_155_body">Settings now slides in over the app instead of replacing it, grouped so each screen is a short list rather than everything at once. Recordings show when the call happened and how long it lasted.\n\nUnderneath: several ways a recording could be lost or spoiled have been fixed, including crackly audio with Resilient recording, and one side going missing from VoIP calls on Samsung phones.</string>
+    <string name="whatsnew_154_title">Recording that recovers on its own</string>
+    <string name="whatsnew_154_body">A rare stall in the connection to the recorder could leave recording silently switched off until the app was restarted — with nothing on screen to say so. It now times out and recovers by itself.\n\nYou can also choose when recordings upload to Drive: immediately, daily or weekly. Find it under Settings ▸ Storage, together with Retention, which has moved into the same section.</string>
+    <string name="whatsnew_153_body">The status card now tells you whether recording actually worked, based on your real calls rather than a green light that only means the app started. If a call was not recorded, it says so and why — a folder that was never set, Developer options switched off, a permission lost to an update.\n\nAlso: CallVault now speaks Brazilian Portuguese, and every other language has been brought up to date.</string>
+    <string name="whatsnew_150_title">Switch Wireless debugging off</string>
+    <string name="whatsnew_150_body">Turning on USB debugging lets CallVault switch Wireless debugging off and keep it off. No cable is needed, and unlike Wireless debugging it opens no network port — so it is the safer of the two to leave on. Optional: recording works either way.\n\nAlso fixed: turning USB debugging off could leave CallVault unable to record, without saying so.</string>
+    <string name="whatsnew_150_where">Settings ▸ Experimental ▸ USB debugging</string>
+    <string name="whatsnew_148_title">More reliable start-up</string>
+    <string name="whatsnew_148_body">On some phones CallVault could keep switching Wireless debugging on and off without ever becoming ready to record. That is fixed. Where Wireless debugging is the only way in, CallVault now leaves it on and tells you which setting would let it be switched off again.\n\nAlso fixed: an app call could report a failure even though it recorded fine, and could be labelled with the wrong app.</string>
+    <string name="whatsnew_147_title">Record app calls (VoIP)</string>
+    <string name="whatsnew_147_body">CallVault can now record calls made inside apps like WhatsApp, Signal and Telegram — both sides of the conversation, not just your own voice. Recordings show which app the call was made in, and the contact\'s name when the app provides it.\n\nExperimental: it works with some apps and not others, and an app can block recording at any time in an update.</string>
+    <string name="whatsnew_147_where">Settings ▸ Experimental ▸ VoIP calls</string>
+    <string name="whatsnew_146_title">Resilient recording</string>
+    <string name="whatsnew_146_body">Android can stop CallVault\'s background helper at any time, which used to cut a recording short and leave you with half a call. With this on, a recording already under way carries on to the end regardless.</string>
+    <string name="whatsnew_146_where">Settings ▸ Experimental ▸ Resilience</string>
+    <string name="whatsnew_145_title">Keep recording when the screen locks</string>
+    <string name="whatsnew_145_body">On many phones, locking the screen during a call was stopping the recorder mid-call. That is fixed, and CallVault now warns you if your phone\'s USB setting is the one causing it.</string>
+    <string name="offline_recording_on">Off-Wi-Fi recording is on.</string>
+    <string name="offline_recording_disabling">Turning off off-Wi-Fi recording…</string>
+
+    <!-- Setup health: what real calls proved, shown as the status card's second line when ready -->
+    <string name="home_health_verified">Last verified %1$s.</string>
+    <string name="home_health_verified_just_now">Last verified just now.</string>
+    <string name="home_health_unverified">Your next call will confirm recording works.</string>
+    <string name="home_health_setup_changed">Setup changed since your last call — your next call will confirm it still works.</string>
+    <string name="home_health_call_not_recorded">A call was not recorded — %1$s, %2$s.</string>
+    <string name="home_health_call_not_recorded_unnamed">A call was not recorded — %1$s.</string>
+    <!-- A call missed while a specific, user-owned prerequisite was missing — named precisely rather
+         than reading as the unexplained daemon-died case above. One pair (labelled/unnamed) per
+         Prerequisite, mirroring home_health_call_not_recorded / _unnamed. -->
+    <string name="home_health_missed_recording_folder">A call was not recorded — no recording folder was set at the time, %1$s.</string>
+    <string name="home_health_missed_recording_folder_unnamed">A call was not recorded — no recording folder was set at the time.</string>
+    <string name="home_health_missed_adb_pairing">A call was not recorded — setup was not finished at the time, %1$s.</string>
+    <string name="home_health_missed_adb_pairing_unnamed">A call was not recorded — setup was not finished at the time.</string>
+    <string name="home_health_missed_developer_options">A call was not recorded — Developer options were off at the time, %1$s.</string>
+    <string name="home_health_missed_developer_options_unnamed">A call was not recorded — Developer options were off at the time.</string>
+    <string name="home_health_missed_secure_settings">A call was not recorded — CallVault had lost permission to start the recorder, %1$s.</string>
+    <string name="home_health_missed_secure_settings_unnamed">A call was not recorded — CallVault had lost permission to start the recorder.</string>
+    <string name="home_health_failed_empty">Your last call produced an empty recording (0 bytes).</string>
+    <string name="home_health_failed_daemon">The recorder stopped during your last call.</string>
+    <string name="home_health_failed_one_sided">Only your side was recorded on your last app call.</string>
+    <string name="home_date_today">Today</string>
+    <string name="home_date_yesterday">Yesterday</string>
+    <string name="whatsnew_157_title">Auto-delete now removes everything it should</string>
+    <string name="whatsnew_157_body">If you set recordings to auto-delete, some were quietly kept for ever — the check only looked at recordings CallVault still had a record of, and any it had lost track of were never removed however old they got. On one phone set to keep a week, 131 files had outlived that.\n\nThe daily check now reads your recording folders as well, so age alone decides. Only files CallVault named are ever touched, and anything it cannot date is left alone.\n\nChanging the time the check runs also takes effect straight away instead of waiting a day.</string>
+    <string name="whatsnew_157_where">Settings ▸ Storage ▸ Retention</string>
+    <string name="whatsnew_156_title">Decide what gets recorded, and tidy up recordings</string>
+    <string name="whatsnew_156_body">Phone calls and app calls can each record automatically, ask first, or be ignored completely — so \"app calls only\" is now a real setting rather than a combination you had to work out.\n\nRecordings can be shared, and held down to select several at once for sharing or deleting. Deleting a recording kept both on the device and in Drive now asks which copies to remove.</string>
+    <string name="whatsnew_156_where">Settings ▸ Recording ▸ Phone calls</string>
+</resources>

@@ -1,0 +1,476 @@
+<!--
+  ~ CallVault: FOSS call recording, self-contained over embedded ADB
+  ~  Copyright (C) 2026-present The CallVault Authors
+  ~  This software is licensed under the GNU General Public License v3 or later, with additional terms as permitted under Section 7.
+  ~  The full license text is available in the LICENSE file at the root of this project.
+  ~  This software is distributed WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  -->
+
+<resources>
+    <!-- ========================================== -->
+    <!-- GENERAL MESSAGES & APP LEVEL               -->
+    <!-- ========================================== -->
+    <string name="app_name" translatable="false">CallVault</string>
+    <string name="general_close">Close</string>
+    <string name="voicemail_contact_label">Voicemail</string>
+    <string name="general_recommended">Recommended</string>
+    <string name="general_continue">Continue</string>
+    <string name="general_ok">OK</string>
+    <string name="general_cancel">Cancel</string>
+    <string name="general_settings">Settings</string>
+    <string name="general_licenses">Licenses</string>
+    <string name="general_copied_to_clipboard">Copied to clipboard</string>
+    <string name="general_record">Record</string>
+    <string name="general_pause">Pause</string>
+    <string name="general_resume">Resume</string>
+    <string name="general_incoming">incoming</string>
+    <string name="general_outgoing">outgoing</string>
+    <string name="general_reset">Reset</string>
+    <string name="general_system_limitation">System Limitation</string>
+    <string name="general_system_limitation_message">CallVault will not work on this device as your shell application does not have the required permissions:\n\n%1$s\n\nThere is nothing you can do about this, the app cannot function and will now close.</string>
+
+    <!-- ========================================== -->
+    <!-- UI SECTIONS                                -->
+    <!-- ========================================== -->
+
+    <!-- Disclaimer Screen -->
+    <string name="disclaimer_title">Welcome to CallVault</string>
+    <string name="disclaimer_introduction">Please read the disclaimer below carefully before continuing.</string>
+    <string name="disclaimer_body" translatable="false">
+        By using this application, you confirm that you have read this disclaimer and acknowledge that this software is licensed under the GNU General Public License v3.0 with additional clauses under Section 7.\n\n
+
+        Copyright © 2026 The CallVault Authors\n\n
+
+        This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.\n\n
+
+        This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\n\n
+
+        You should have received a copy of the GNU General Public License along with this program. If not, see the LICENSE file included with this application.\n\n
+
+        ----------------------Disclaimer---------------------------\n\n
+
+        Recording phone calls may be subject to complex and varying laws in different countries and jurisdictions. For example, you may need to ensure you have consent from all parties before recording conversations. The developers and contributors are not responsible for any misuse or legal consequences arising from the use of this application.\n
+        You can learn more on Wikipedia at:\n https://en.wikipedia.org/wiki/Telephone_call_recording_laws.\n\n
+
+        If you are legally required to inform or ask someone for consent before recording, please note that the application DOES NOT handle this for you.\n
+        In some cases, certain features, like automatic call recording, may not be legally allowed. It is your responsibility to ensure compliance with applicable laws. This is not legal advice. Please consult a legal professional for guidance regarding your specific situation.\n\n
+
+        APPLICATION BEHAVIOR\n
+        Due to the evolving Android ecosystem and varying hardware (OEMs), this software is subject to non-deterministic behavior:\n\n
+        * Concurrent Calls: The app may fail to detect transitions (e.g., while in a call, a second incoming call arrives, or switching between held calls). In these scenarios, the application may continue to record audio into a single continuous file without separate notifications or new notifications prompts for subsequent callers.\n\n
+        * Filter Logic Limitations: Due to Android privacy-driven restrictions on real-time phone number access, the app relies on fetching a deprecated value when it receives a phone state updates. We are not aware of other rational workaround for standard apps (alternatives are restrictive or incompatible). This initial check is used to decide whether to automatically record based on your settings. In cases where we receive the value too late, receive invalid data, or receive no data, the application is likely to consider the call as anonymous in its decision process. This should not affect the final file name since we can read the device call logs after the call ended.\n\n
+        * Unforeseen Failures: Future OS updates, bugs, design choices in the app, or undocumented system behaviors may cause the app to start and/or continue recording, or fail, in a unexpected manner.\n\n
+
+        USER AWARENESS\n
+        Because deterministic behavior in the application cannot be guaranteed, it is your responsibility to:\n\n
+        1. Ensure the recording behavior and your application settings aligns with your intent and the specific requirements in your jurisdiction.\n\n
+        2. Monitor the app behavior on your specific device. If you observe any behavior that does not comply with your local laws, you must immediately cease any activity that constitutes a legal infraction (For example, hanging up the call, deleting the audio files, etc).
+    </string>
+    <string name="disclaimer_checkbox_label">I have read the disclaimer and understand the legal requirements, responsibilities, and technical limitations of this software.</string>
+    <string name="disclaimer_wait">Wait %1$ds</string>
+    <string name="disclaimer_must_read">You must read the disclaimer.</string>
+
+    <!-- Permissions Screen -->
+    <string name="permissions_title">Permissions Setup</string>
+    <string name="permissions_intro">We need a few permissions to start recoding. Tap "Grant Access" and approve each item.</string>
+    <string name="permissions_grant_access">Grant Access</string>
+    <string name="permissions_status_granted">Granted</string>
+    <string name="permissions_status_required">Required</string>
+
+    <string name="permission_notifications_label">Notifications</string>
+    <string name="permission_notifications_description">Used for recording status and error alerts.</string>
+
+    <string name="permission_contacts_label">Contacts</string>
+    <string name="permission_contacts_description">Used to filter known contacts for ignore rules.</string>
+
+    <string name="permission_phone_state_label">Phone State</string>
+    <string name="permission_phone_state_description">Required to detect when a call starts or ends.</string>
+
+    <string name="permission_call_log_label">Call Log</string>
+    <string name="permission_call_log_description">Required so we receive the unredacted phone number on phone state events.</string>
+
+    <string name="permission_usb_debugging_label">USB debugging</string>
+    <string name="permission_usb_debugging_description">Recommended. Lets CallVault switch Wireless debugging off after setup. No cable needed.</string>
+    <string name="permission_battery_label">Battery Optimization</string>
+    <string name="permission_battery_description">Keeps the app alive when it needs and allow to bypass possible background startup limitations. On some phones (e.g. OnePlus/OxygenOS) also set this app\'s battery mode to \"Allow background activity\".</string>
+    <string name="permission_battery_oem_hint">Battery exemption set. Now on this App info page, tap \"Battery\", then choose \"Allow background activity\" (Unrestricted) — required so recording survives in the background on OnePlus/OxygenOS.</string>
+
+    <!-- Same label as settings_recording_folder_label -->
+    <string name="permission_storage_description">Select where recordings will be saved.</string>
+
+    <string name="permission_adb_label" translatable="false">Wireless debugging (ADB)</string>
+    <string name="permission_adb_description">Required to capture call audio. Pair once via the notification, then it connects automatically.</string>
+    <string name="permission_adb_not_connected">Not connected — tap to set up</string>
+    <string name="permission_adb_setup">Authorize</string>
+
+    <!-- Settings Screen: Section Titles -->
+    <string name="settings_section_about">About</string>
+    <string name="settings_section_recording">Recording</string>
+    <string name="settings_section_storage">Storage</string>
+    <string name="settings_section_retention">Retention</string>
+
+    <!-- Retention (auto-delete old recordings) -->
+    <string name="retention_keep_forever">Keep forever</string>
+    <string name="retention_daily">Daily (1 day)</string>
+    <string name="retention_weekly">Weekly (7 days)</string>
+    <string name="retention_biweekly">Bi-weekly (14 days)</string>
+    <string name="retention_monthly">Monthly (30 days)</string>
+    <string name="retention_linked_label">Same period for device &amp; Drive</string>
+    <string name="retention_period_label">Auto-delete recordings</string>
+    <string name="retention_local_label">Device recordings</string>
+    <string name="retention_drive_label">Drive recordings</string>
+    <string name="retention_description">Recordings older than the selected period are permanently deleted. Checked once a day at the time below.</string>
+    <string name="retention_time_label">Run at (your local time)</string>
+    <string name="retention_confirm_title">Enable auto-delete?</string>
+    <string name="retention_confirm_message">Recordings older than the selected period will be permanently deleted from your device and/or Google Drive. This can\'t be undone.</string>
+    <string name="retention_confirm_enable">Enable</string>
+    <string name="settings_section_recording_storage">Recording &amp; storage</string>
+    <string name="settings_section_general">General</string>
+    <string name="settings_section_visual">Visual settings</string>
+    <string name="settings_section_audio">Audio configuration</string>
+    <string name="settings_section_reliability">Reliability</string>
+    <string name="settings_section_experimental">Experimental</string>
+    <string name="settings_subsection_incoming">Incoming calls</string>
+    <string name="settings_subsection_outgoing">Outgoing calls</string>
+    <string name="settings_subsection_resilience">Resilience</string>
+    <string name="settings_subsection_voip">VoIP calls</string>
+    <string name="settings_voip_recording_label">Record VoIP calls</string>
+    <string name="settings_voip_recording_description">Also record calls made in apps like WhatsApp, Signal and Telegram. Experimental — some apps block recording, and this cannot be known until a call is under way.</string>
+    <string name="settings_voip_auto_start_label">Start automatically</string>
+    <string name="settings_voip_auto_start_description">Off means CallVault asks first: a notification with a Record button appears when an app call starts.</string>
+    <string name="voip_prompt_title">App call in progress</string>
+    <string name="voip_prompt_text">Tap Record to record this call.</string>
+    <string name="voip_prompt_text_named">%1$s call. Tap Record to record it.</string>
+    <string name="voip_recording_warning_title">Record VoIP calls?</string>
+    <string name="voip_recording_warning_message">Recording app calls is more tightly regulated than recording phone calls, and in many places every participant must agree first. Please make sure you are allowed to.\n\nThis is experimental: it works with some apps and not others, and an app can block recording at any time in an update.</string>
+    <string name="voip_recording_warning_continue">I understand, turn it on</string>
+    <string name="voip_recording_arming">Preparing VoIP recording…</string>
+    <string name="notif_voip_recording_title">Recording VoIP call</string>
+    <string name="notif_voip_recording_text">CallVault is recording an app call.</string>
+    <string name="voip_one_sided_warning">Only your side of that app call was recorded — the other app does not allow its call audio to be captured.</string>
+    <string name="voip_recording_unavailable">Couldn\'t enable on this device — VoIP recording isn\'t available here.</string>
+    <string name="voip_recording_names_hint">Contact names come from the calling app\'s own call notification. If notifications are turned off for that app, its recordings are saved without a name.</string>
+    <string name="settings_usb_debugging_label">USB debugging</string>
+    <string name="settings_usb_debugging_description">Recommended. Lets CallVault switch Wireless debugging off. No cable needed, and unlike Wireless debugging it opens no network port.</string>
+    <string name="settings_usb_debugging_recommended">Wireless debugging has to stay on without this. Turning this on lets CallVault switch it off.</string>
+    <string name="settings_usb_debugging_on_hint">CallVault can keep Wireless debugging off. Don\'t turn this back off — that would leave no way in, so Wireless debugging comes back on.</string>
+    <string name="settings_usb_debugging_failed">Couldn\'t change it — CallVault needs the permission it gets during setup.</string>
+    <string name="notif_info_channel">CallVault notices</string>
+    <string name="notif_wd_reverted_title">Wireless debugging switched back off</string>
+    <string name="notif_wd_reverted_text">USB debugging is on, so CallVault doesn\'t need Wireless debugging — and it opens a network port, so it\'s left off. If you turned it on for something else, turn off USB debugging first and CallVault will leave Wireless debugging alone.</string>
+    <string name="notif_wd_required">Wireless debugging has to stay on for CallVault to stay ready on this phone. Turn on “Record without Wi-Fi” in Settings ▸ Experimental (or enable USB debugging) and CallVault will switch it off again.</string>
+    <string name="settings_section_debug">Debug</string>
+    <string name="settings_section_security">Security</string>
+    <string name="settings_section_recorder_server">Recorder service</string>
+
+    <!-- Settings Screen: Recorder Service Section -->
+    <string name="settings_persistent_server">Persistent recorder server</string>
+    <string name="settings_persistent_server_description">Record calls via a background privileged service so Wireless debugging can stay off between calls. Experimental.</string>
+    <string name="settings_wd_disable_when_idle">Turn off Wireless debugging when idle</string>
+    <string name="settings_wd_disable_when_idle_description">Disable Wireless debugging once the recorder service is connected; re-enabled briefly only when needed.</string>
+
+    <!-- Settings Screen: Storage Section -->
+    <string name="settings_storage_section">Storage</string>
+    <string name="settings_storage_target_label">Where to save recordings</string>
+    <string name="storage_target_local">On this device only</string>
+    <string name="storage_target_drive">Google Drive only</string>
+    <string name="storage_target_both">Device + Google Drive</string>
+    <string name="settings_drive_folder_label">Google Drive folder</string>
+    <string name="settings_drive_folder_desc">Pick a folder (in the Google Drive app) to copy recordings to.</string>
+    <string name="general_not_set">Not set</string>
+
+    <!-- Settings Screen: Security Section -->
+
+    <!-- Settings Screen: Recording Section -->
+    <string name="settings_tap_to_select_folder">Tap to select folder...</string>
+    <string name="settings_recording_folder_label">Recording Folder</string>
+    <string name="folder_cloud_rejected">Cloud folders (like Google Drive) can\'t be used for recording. Pick on-device storage — use the Google Drive backup option for cloud copies.</string>
+    <string name="folder_cloud_warning">⚠ This recording folder is in the cloud, which is unreliable for capture. Choose an on-device folder.</string>
+
+    <!-- Offline recording (loopback) opt-in + security warning -->
+    <string name="settings_offline_recording_label">Offline recording (no Wi-Fi)</string>
+    <string name="settings_offline_recording_desc">Record calls even when there is no Wi-Fi network.</string>
+    <string name="settings_handoff_persist_label">Resilient recording</string>
+    <string name="settings_handoff_persist_description">Keep a recording going even if the background helper is killed mid-call (e.g. when you lock the screen). Experimental.</string>
+    <string name="settings_usb_default_label">USB when screen unlocks</string>
+    <string name="settings_usb_default_hint">"Charging only" keeps recording alive if you lock the screen during a call. Other modes let USB transfer data but can interrupt a recording when you lock the phone.</string>
+    <string name="settings_usb_default_applying">Applying…</string>
+    <string name="usb_mode_charging">Charging only (no data)</string>
+    <string name="usb_mode_debugging_only">Debugging only</string>
+    <string name="usb_mode_file_transfer">File transfer</string>
+    <string name="usb_mode_ptp">PTP</string>
+    <string name="usb_mode_tethering">USB tethering</string>
+    <string name="usb_mode_midi">MIDI</string>
+    <string name="offline_recording_warning_title">Enable offline recording?</string>
+    <string name="offline_recording_warning_message">This opens a local debugging port on your phone so calls can record with no Wi-Fi. It is protected by your device\'s key, but it is a small security tradeoff. Only enable it if you need to record calls without Wi-Fi.</string>
+    <string name="offline_recording_warning_continue">Continue anyway</string>
+
+    <string name="settings_file_name_template">File Name Template</string>
+    <string name="settings_file_name_template_preset">Preset</string>
+    <string name="settings_file_name_preset_date_direction_number">Date · Direction · Number</string>
+    <string name="settings_file_name_preset_date_number">Date · Number</string>
+    <string name="settings_file_name_preset_date_contact">Date · Contact</string>
+    <string name="settings_file_name_preset_date_direction_contact">Date · Direction · Contact</string>
+    <string name="settings_file_name_preset_custom">Custom</string>
+    <string name="settings_file_name_template_placeholders">Placeholders:</string>
+    <string name="settings_file_name_template_placeholders_preview">Preview: %1$s</string>
+    <string name="settings_file_name_template_example">Example: %1$s</string>
+    <string name="placeholder_date_desc">The current date and time</string>
+    <string name="placeholder_direction_desc">The call direction (in/out)</string>
+    <string name="placeholder_phone_number_desc">The phone number</string>
+    <string name="placeholder_contact_name_desc">The contact name, if available</string>
+    <string name="placeholder_cross_country_desc">Indicates if the call is cross-country (true/false)</string>
+
+    <string name="settings_subsection_phone_calls">Phone calls</string>
+    <string name="settings_carrier_recording">Record phone calls</string>
+    <string name="settings_carrier_recording_description">Off: phone calls are ignored completely — no recording, no notification. App calls are unaffected.</string>
+    <string name="settings_auto_record_incoming">Automatically record incoming calls</string>
+    <string name="settings_auto_record_outgoing">Automatically record outgoing calls</string>
+    <string name="settings_ignore_anonymous_incoming">Ignore anonymous incoming calls</string>
+    <string name="settings_ignore_cross_country_incoming">Ignore cross-country incoming calls</string>
+    <string name="settings_ignore_cross_country_outgoing">Ignore cross-country outgoing calls</string>
+    <string name="settings_ignore_contacts_incoming">Ignore contacts (incoming)</string>
+    <string name="settings_ignore_contacts_outgoing">Ignore contacts (outgoing)</string>
+    <string name="settings_ignore_contacts_none">Record all contacts</string>
+    <string name="settings_ignore_contacts_all">Ignore all contacts</string>
+    <string name="settings_ignore_contacts_selected">Ignore selected contacts</string>
+    <string name="settings_select_contacts">Select contacts (%1$d)</string>
+    <string name="settings_select_contacts_incoming">Select incoming contacts</string>
+    <string name="settings_select_contacts_outgoing">Select outgoing contacts</string>
+
+    <!-- Settings Screen: Visual Section -->
+    <string name="settings_language">Language</string>
+    <string name="settings_language_system">System Default</string>
+    <string name="settings_theme_mode">Theme mode</string>
+    <string name="settings_dynamic_color">Dynamic Theme Color</string>
+    <string name="settings_show_toasts">Show Toast Notifications</string>
+    <string name="settings_vibration_enabled">Vibrate on start/stop</string>
+
+    <string name="settings_theme_mode_system">System default</string>
+    <string name="settings_theme_mode_light">Light</string>
+    <string name="settings_theme_mode_dark">Dark</string>
+
+    <!-- Settings Screen: Audio Section -->
+    <string name="settings_audio_codec">Audio codec</string>
+    <string name="settings_audio_bitrate_recommendation">If you have difficulties, try AAC, it is widely supported by OEMs.</string>
+    <string name="audio_codec_opus" translatable="false">Opus</string>
+    <string name="audio_codec_aac" translatable="false">AAC</string>
+
+    <string name="settings_audio_bitrate">Audio bit rate</string>
+    <string name="audio_bitrate_kbps" translatable="false">%1$d kbps</string>
+
+    <string name="settings_audio_source">Audio source</string>
+    <string name="audio_source_voice_comm" translatable="false">Voice communication mic</string>
+    <string name="audio_source_voice_comm_description">Microphone audio source tuned for voice communications. Built-in echo cancellation.</string>
+
+    <string name="audio_source_mic" translatable="false">Standard microphone</string>
+    <string name="audio_source_mic_description">Captures audio directly from the device main microphone. Minor noise reduction.</string>
+
+    <string name="audio_source_voice_call" translatable="false">Voice call</string>
+    <string name="audio_source_voice_call_description">Records both sides of a phone calls. The raw audio, with phone tones.</string>
+
+    <string name="audio_source_playback" translatable="false">Audio playback</string>
+    <string name="audio_source_playback_description">Capture audio from other apps, except those that restrict recording (respects app opt-out flags).</string>
+
+    <string name="audio_source_output" translatable="false">Audio output (remote submix)</string>
+    <string name="audio_source_output_description">Captures the final, combined audio exactly as it is sent to your speakers.</string>
+
+    <string name="audio_source_mic_unprocessed" translatable="false">Unprocessed mic</string>
+    <string name="audio_source_mic_unprocessed_description">Captures raw, natural microphone audio without any automatic filtering or enhancement.</string>
+
+    <string name="audio_source_mic_camcorder" translatable="false">Camcorder mic</string>
+    <string name="audio_source_mic_camcorder_description">Tuned for video recording, focusing on audio from the direction of the camera.</string>
+
+    <string name="audio_source_mic_voice_recognition" translatable="false">Voice recognition mic</string>
+    <string name="audio_source_mic_voice_recognition_description">Microphone with processing tuned for speech recognition (reduced noise).</string>
+
+    <string name="audio_source_voice_call_uplink" translatable="false">Voice call uplink</string>
+    <string name="audio_source_voice_call_uplink_description">Records only your side of a phone call (uplink).</string>
+
+    <string name="audio_source_voice_call_downlink" translatable="false">Voice call downlink</string>
+    <string name="audio_source_voice_call_downlink_description">Records only the other person side of a phone call (downlink).</string>
+
+    <string name="audio_source_voice_performance" translatable="false">Voice performance</string>
+    <string name="audio_source_voice_performance_description">High-speed microphone mode designed for live music and real-time audio apps.</string>
+
+    <!-- Settings Screen: Debug section (always visible) -->
+    <string name="settings_debug_logging_enabled">Enable log recording</string>
+    <string name="settings_debug_logging_enabled_description">To report a bug, enable this, reproduce the issue, then turn it off and share the logs.</string>
+    <string name="settings_bugreport_active_warning">Debug logging is ON. Remember to turn it off when you\'re done to save space.</string>
+    <string name="settings_bugreport_share_hint">Logs from your last debug session are ready to share.</string>
+    <string name="settings_bugreport_share">Share debug logs</string>
+    <string name="settings_bugreport_share_empty">No logs yet. Enable debug logging, reproduce the issue, then tap share.</string>
+    <string name="settings_bugreport_share_chooser">Share debug logs</string>
+
+    <!-- Persistent reminder that debug logging is enabled -->
+    <string name="debug_notification_channel_name">Debug logging</string>
+    <string name="debug_notification_title">Debug logging is on</string>
+    <string name="debug_notification_text">Tap to open CallVault and turn it off when you\'re done.</string>
+
+    <!-- Settings Screen: About/Server Section -->
+    <string name="settings_copy_version">Copy Version</string>
+    <string name="settings_view_licenses">View Licenses</string>
+    <string name="settings_scrcpy_server" translatable="false">Scrcpy-Server: %1$s</string>
+    <string name="settings_fork_attribution" translatable="false">CallVault is a fork of ShizuCallRecorder</string>
+    <string name="settings_fork_attribution_supporting" translatable="false">github.com/kitsumed/ShizuCallRecorder</string>
+    <string name="settings_support_label">Support development</string>
+    <string name="settings_support_value">Buy me a coffee on Ko-fi</string>
+    <string name="settings_support_supporting">Opens Ko-fi in your browser</string>
+
+    <!-- ContactSelection Dialog -->
+    <string name="contact_search_hint">Search by name or number...</string>
+    <string name="contact_select_all">Select all</string>
+    <string name="contact_unselect_all">Unselect all</string>
+
+    <!-- ========================================== -->
+    <!-- SERVICES & BACKGROUND                      -->
+    <!-- ========================================== -->
+
+    <!-- Recording Service: Notifications -->
+    <string name="recording_standby_notification_title">Call in progress</string>
+    <string name="recording_notification_cross_country_tip">🌐Cross-Country</string>
+    <string name="recording_notification_current_country_tip">🏠Home-Country</string>
+    <string name="recording_notification_title">Recording in progress</string>
+    <string name="recording_notification_press_to_start">Press to start recording</string>
+    <string name="recording_notification_waiting">Preparing to record…</string>
+    <string name="recording_notification_press_to_pause">Press to pause recording</string>
+    <string name="recording_notification_press_to_resume">Press to resume recording</string>
+    <string name="recording_toast_standby">Entering standby for %1$s call.</string>
+    <string name="recording_toast_ended">Call ended. Recording stopped.</string>
+    <string name="recording_toast_paused">Recording paused.</string>
+    <string name="recording_toast_resumed">Recording resumed.</string>
+    <string name="recording_started">Recording started.</string>
+    <!-- Recording Service: Errors -->
+    <string name="recording_error_title">Recording Error</string>
+    <string name="recording_error_folder_missing">Selected output folder is missing, invalid, or we do not have permission to write to it. Select one in the app settings.</string>
+    <string name="recording_error_server_missing">Scrcpy-server binary is missing or the security SHA256 check failed. This should not happen, please report this.</string>
+    <string name="recording_error_file_creation">Failed to create recording file. Please check the storage permissions and/or select a new recording folder in the app settings.</string>
+    <string name="recording_error_start_failed">Failed to start the recording. An error occurred when calling the ShellService binder method.</string>
+    <string name="recording_error_empty_file">The recording is empty — no audio was captured because the recorder daemon was not running. Check that Developer options and Wireless debugging are enabled.</string>
+    <string name="recording_error_daemon_died">The recorder daemon stopped — this call is NOT being recorded. Check that Developer options and Wireless debugging are enabled.</string>
+    <string name="recording_error_drive_copy_failed">A recording could not be copied to your cloud folder. It is still saved on this device — check the folder in Settings.</string>
+    <string name="recording_unexpected_error">An unexpected error occurred during recording. Please report this with the steps to reproduce and the apps logs.</string>
+
+    <!-- Setup Wizard -->
+    <string name="wizard_title">Set up CallVault</string>
+    <string name="wizard_step_of">Step %1$d of %2$d</string>
+    <string name="wizard_back">Back</string>
+    <string name="wizard_next">Next</string>
+    <string name="wizard_finish">Finish</string>
+    <string name="wizard_choose_folder">Choose folder</string>
+    <!-- Wizard: Storage step -->
+    <string name="wizard_storage_title">Where to save recordings</string>
+    <string name="wizard_storage_subtitle">Choose where your recordings are stored. You can change this later in Settings.</string>
+    <string name="wizard_storage_drive_note">With Google Drive, the copy on this device is temporary and is deleted after it has been uploaded.</string>
+    <!-- Wizard: Schedule step -->
+    <string name="wizard_schedule_title">When to upload to Drive</string>
+    <string name="wizard_schedule_subtitle">Choose how often recordings are uploaded to your Google Drive folder.</string>
+    <string name="wizard_schedule_mode_label">Upload schedule</string>
+    <string name="wizard_schedule_immediate">Immediately</string>
+    <string name="wizard_schedule_daily">Daily</string>
+    <string name="wizard_schedule_weekly">Weekly</string>
+    <string name="wizard_schedule_immediate_note">Every call is uploaded automatically as soon as it finishes.</string>
+    <string name="wizard_schedule_day_label">Day of week</string>
+    <string name="wizard_schedule_hour_label">Hour</string>
+    <string name="wizard_schedule_minute_label">Minute</string>
+    <string name="wizard_day_sunday">Sunday</string>
+    <string name="wizard_day_monday">Monday</string>
+    <string name="wizard_day_tuesday">Tuesday</string>
+    <string name="wizard_day_wednesday">Wednesday</string>
+    <string name="wizard_day_thursday">Thursday</string>
+    <string name="wizard_day_friday">Friday</string>
+    <string name="wizard_day_saturday">Saturday</string>
+    <!-- Wizard: Auto-record step -->
+    <string name="wizard_auto_record_title">Automatic recording</string>
+    <string name="wizard_auto_record_subtitle">Choose which calls are recorded automatically. You can fine-tune this later in Settings.</string>
+    <!-- Wizard: Audio step -->
+    <string name="wizard_experimental_title">Optional extras</string>
+    <string name="wizard_experimental_subtitle">Two features still being proven. Both are off by default — you can turn them on later in Settings.</string>
+    <string name="wizard_updates_title">Staying up to date</string>
+    <string name="wizard_updates_subtitle">CallVault is not on an app store, so it checks GitHub for new versions itself.</string>
+    <string name="wizard_reliability_title">Reliable recording</string>
+    <string name="wizard_reliability_subtitle">Two optional settings that keep recording working in tricky conditions. You can skip these and change them later in Settings.</string>
+    <string name="wizard_reliability_usb_title">Keep recording when the screen locks</string>
+    <string name="wizard_reliability_usb_desc">On some phones, locking the screen during a call can stop the recording. Setting USB to \"Charging only\" prevents that. (Your phone then defaults to charging when plugged into a PC — pick File transfer manually when you need it.)</string>
+    <string name="wizard_reliability_usb_button">Set USB to Charging only</string>
+    <string name="wizard_reliability_usb_done">USB is set to Charging only</string>
+    <string name="wizard_reliability_offline_button">Enable</string>
+    <string name="wizard_reliability_offline_done">Offline recording is on</string>
+    <string name="wizard_audio_title">Audio quality</string>
+    <string name="wizard_audio_subtitle">Pick the recording format and bit rate. Opus at 16 kbps is recommended for clear voice at small file sizes.</string>
+    <string name="wizard_filename_title">File name format</string>
+    <string name="wizard_filename_subtitle">Choose how saved recordings are named.</string>
+
+    <!-- Home -->
+    <string name="home_all_set_message">You\'re all set. CallVault is ready to record your calls.</string>
+    <string name="home_open_settings">Settings</string>
+
+    <!-- Home: status card -->
+    <string name="home_status_no_folder_title">No recording folder set</string>
+    <string name="home_status_no_folder_suggestion">Open Settings to choose where recordings are saved.</string>
+    <string name="home_status_not_paired_title">Setup not complete</string>
+    <string name="home_status_not_paired_suggestion">Finish Wireless Debugging pairing in setup.</string>
+    <string name="home_status_dev_options_off_title">Developer options is off</string>
+    <string name="home_status_dev_options_off_suggestion">CallVault records through Wireless debugging, which needs Developer options. Recording cannot work until you re-enable Developer options (and Wireless debugging) in system settings.</string>
+    <string name="home_status_update_regrant_title">Reconnect to keep recording</string>
+    <string name="home_status_update_regrant_suggestion">An update removed a permission CallVault needs to restart recording. It may still work for now — tap here, then turn Wireless debugging on once to restore it. No reinstall needed.</string>
+    <string name="home_status_ready_title">Ready to record</string>
+    <string name="home_status_ready_suggestion">CallVault records calls automatically per your settings.</string>
+
+    <!-- Home: recordings list -->
+    <string name="home_recordings_title">Recordings</string>
+    <string name="home_recordings_empty">No recordings yet.</string>
+
+    <!-- Home: inline player -->
+    <string name="home_player_play">Play</string>
+    <string name="home_player_pause">Pause</string>
+    <string name="home_player_stop">Stop</string>
+    <string name="home_player_loading">Loading…</string>
+    <string name="home_player_error">Couldn\'t play this file.</string>
+
+    <!-- Home: delete recording -->
+    <string name="home_share">Share</string>
+    <string name="home_share_chooser">Share recording</string>
+    <string name="home_row_menu">More options</string>
+    <string name="home_delete">Delete</string>
+    <string name="home_delete_confirm_title">Delete recording?</string>
+    <string name="home_delete_confirm_message">This permanently deletes %1$s.</string>
+    <string name="settings_section_updates">Updates</string>
+    <string name="settings_update_check_label">Check for updates</string>
+    <string name="settings_update_check_description">Once a day, look for a new version on GitHub.</string>
+    <string name="support_appeal_title">Made by one person 👋</string>
+    <string name="support_appeal_body">I build CallVault on my own, in my free time — free, open source, no ads, no tracking. ☕ If it\'s useful to you, a small tip keeps me going. Either way, thanks! 🙏</string>
+    <string name="support_kofi" translatable="false">Ko-fi</string>
+    <string name="support_paypal" translatable="false">PayPal</string>
+    <string name="support_not_now">Not now</string>
+    <string name="home_bulk_delete_message">This cannot be undone.</string>
+    <string name="home_bulk_delete_scope_message">Some are saved both on this device and in Drive.</string>
+    <string name="home_bulk_delete_device_only">Device only</string>
+    <string name="home_bulk_delete_drive_only">Drive only</string>
+    <string name="home_bulk_delete_both">Both copies</string>
+    <plurals name="home_selected_count">
+        <item quantity="one">%1$d selected</item>
+        <item quantity="other">%1$d selected</item>
+    </plurals>
+    <plurals name="home_bulk_delete_title">
+        <item quantity="one">Delete %1$d recording?</item>
+        <item quantity="other">Delete %1$d recordings?</item>
+    </plurals>
+    <string name="home_bulk_delete_scope_label">Copies to delete</string>
+    <string name="home_bulk_delete_option_count">%1$s (%2$d of %3$d)</string>
+    <string name="home_bulk_delete_kept_drive">%1$s will be kept — only in Drive.</string>
+    <string name="home_bulk_delete_kept_device">%1$s will be kept — only on this device.</string>
+    <plurals name="home_bulk_delete_kept_count">
+        <item quantity="one">%1$d recordings</item>
+        <item quantity="other">%1$d recordings</item>
+    </plurals>
+    <string name="settings_debug_log_file">Log file</string>
+    <string name="settings_debug_log_view_hint">Tap to read the most recent entries.</string>
+    <string name="settings_debug_log_delete">Delete log</string>
+    <string name="settings_debug_log_delete_title">Delete the log?</string>
+    <string name="settings_debug_log_delete_message">The entries collected so far are removed. If logging is still on, a new log starts immediately.</string>
+    <string name="settings_debug_log_empty">The log is empty.</string>
+    <string name="home_status_recovery_stuck_title">Recording is down</string>
+    <string name="home_status_recovery_stuck_suggestion">CallVault keeps failing to restart its recorder, so calls are not being recorded. Reopening the app usually clears it.</string>
+    <string name="home_hero_pill_recovery_stuck">Not recording</string>
+</resources>
