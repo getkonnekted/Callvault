@@ -2,6 +2,7 @@
 
 * CallVault: FOSS call recording, self-contained over embedded ADB
 * Copyright (C) 2026-present The CallVault Authors
+*
 * This software is licensed under the GNU General Public License v3 or later,
 * with additional terms as permitted under Section 7.
   */
@@ -22,7 +23,7 @@ import com.baba.callvault.integrations.scrcpy.ScrcpyAudioCodec
 import com.baba.callvault.integrations.scrcpy.ScrcpyAudioSource
 import com.baba.callvault.integrations.scrcpy.androidAudioSource
 import com.baba.callvault.stt.AudioFrameBus
-import com.baba.callvault.stt.AudioFrameTestWorker
+import com.baba.callvault.stt.WhisperTranscriptionWorker
 import com.baba.callvault.utils.AppLogger
 import com.baba.callvault.utils.PcmDownmix
 import java.util.concurrent.atomic.AtomicBoolean
@@ -35,19 +36,37 @@ internal class DirectAudioRecorderSession(
 ) : RecordingSession {
 
 
-    private val stopRequested = AtomicBoolean(false)
+    private val stopRequested =
+        AtomicBoolean(false)
 
     @Volatile
-    private var audioRecord: AudioRecord? = null
+    private var audioRecord: AudioRecord? =
+        null
 
     @Volatile
-    private var encoder: MediaCodec? = null
+    private var encoder: MediaCodec? =
+        null
 
     @Volatile
-    private var muxer: MediaMuxer? = null
+    private var muxer: MediaMuxer? =
+        null
 
     @Volatile
-    private var readThread: Thread? = null
+    private var readThread: Thread? =
+        null
+
+    /**
+     * Etat du muxer partagé avec la boucle de capture.
+     *
+     * IMPORTANT :
+     * Le numéro de piste ne doit pas être recréé à chaque appel
+     * de drainEncoder().
+     */
+    private var muxerStarted =
+        false
+
+    private var muxerTrack =
+        -1
 
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     override fun start() {
@@ -58,6 +77,9 @@ internal class DirectAudioRecorderSession(
         try {
 
             stopRequested.set(false)
+
+            muxerStarted = false
+            muxerTrack = -1
 
             startInternal()
 
@@ -76,10 +98,6 @@ internal class DirectAudioRecorderSession(
 
             stopRequested.set(true)
 
-            /*
-             * Stop AudioRecord first so a possible blocking read()
-             * can be released.
-             */
             runCatching {
                 audioRecord?.stop()
             }
@@ -88,7 +106,7 @@ internal class DirectAudioRecorderSession(
                 readThread?.join(READ_JOIN_MS)
             }
 
-            AudioFrameTestWorker.stop()
+            WhisperTranscriptionWorker.stop()
 
             cleanupPartial()
 
@@ -99,7 +117,10 @@ internal class DirectAudioRecorderSession(
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     private fun startInternal() {
 
-        AppLogger.i(TAG, "Direct capture initialization started")
+        AppLogger.i(
+            TAG,
+            "Direct capture initialization started"
+        )
 
         val androidSource =
             source.androidAudioSource
@@ -107,7 +128,8 @@ internal class DirectAudioRecorderSession(
                     "source ${source.cliKey} is not a mic-type source"
                 )
 
-        val mime = encoderMimeFor(codec)
+        val mime =
+            encoderMimeFor(codec)
 
         AppLogger.i(
             TAG,
@@ -119,6 +141,12 @@ internal class DirectAudioRecorderSession(
             "Encoder MIME: $mime"
         )
 
+        /*
+         * ---------------------------------------------------------
+         * AudioRecord
+         * ---------------------------------------------------------
+         */
+
         val (record, captureChannels) =
             openAudioRecord(androidSource)
 
@@ -128,21 +156,27 @@ internal class DirectAudioRecorderSession(
             TAG,
             "AudioRecord initialized successfully: " +
                     "channels=$captureChannels " +
-                    "sampleRate=$SAMPLE_RATE"
+                    "sampleRate=$CAPTURE_SAMPLE_RATE"
         )
+
+        /*
+         * ---------------------------------------------------------
+         * MediaCodec encoder
+         * ---------------------------------------------------------
+         */
 
         val effectiveBitRate =
             EncoderLimits.resolveBitRate(
                 mime,
                 bitRate,
-                SAMPLE_RATE,
+                CAPTURE_SAMPLE_RATE,
                 ENCODE_CHANNELS
             )
 
         val format =
             MediaFormat.createAudioFormat(
                 mime,
-                SAMPLE_RATE,
+                CAPTURE_SAMPLE_RATE,
                 ENCODE_CHANNELS
             ).apply {
 
@@ -151,7 +185,10 @@ internal class DirectAudioRecorderSession(
                     effectiveBitRate
                 )
 
-                if (mime == MediaFormat.MIMETYPE_AUDIO_AAC) {
+                if (
+                    mime ==
+                    MediaFormat.MIMETYPE_AUDIO_AAC
+                ) {
 
                     setInteger(
                         MediaFormat.KEY_AAC_PROFILE,
@@ -183,13 +220,25 @@ internal class DirectAudioRecorderSession(
             "MediaCodec configured successfully"
         )
 
-        val mux =
+        /*
+         * ---------------------------------------------------------
+         * MediaMuxer
+         * ---------------------------------------------------------
+         */
+
+        val localMuxer =
             MediaMuxer(
                 outFd.fileDescriptor,
                 codec.outputFormat
             )
 
-        muxer = mux
+        muxer = localMuxer
+
+        /*
+         * ---------------------------------------------------------
+         * Start encoder
+         * ---------------------------------------------------------
+         */
 
         enc.start()
 
@@ -199,16 +248,37 @@ internal class DirectAudioRecorderSession(
         )
 
         /*
-         * Start the PCM consumer before capture starts.
+         * ---------------------------------------------------------
+         * Start Whisper PCM pipeline
+         * ---------------------------------------------------------
+         *
+         * IMPORTANT:
+         *
+         * WhisperTranscriptionWorker expects:
+         *
+         * - mono
+         * - PCM 16-bit
+         * - 16 kHz
+         *
+         * The recording pipeline uses 48 kHz mono.
+         *
+         * We therefore publish a downsampled copy to AudioFrameBus.
          */
+
         AudioFrameBus.clear()
 
-        AudioFrameTestWorker.start()
+        WhisperTranscriptionWorker.start()
 
         AppLogger.i(
             TAG,
-            "AudioFrameTestWorker started"
+            "WhisperTranscriptionWorker started"
         )
+
+        /*
+         * ---------------------------------------------------------
+         * Start AudioRecord
+         * ---------------------------------------------------------
+         */
 
         record.startRecording()
 
@@ -230,15 +300,22 @@ internal class DirectAudioRecorderSession(
             "source=${source.cliKey} " +
                     "captureCh=$captureChannels " +
                     "encodeCh=$ENCODE_CHANNELS " +
-                    "rate=$SAMPLE_RATE"
+                    "captureRate=$CAPTURE_SAMPLE_RATE " +
+                    "whisperRate=$WHISPER_SAMPLE_RATE"
         )
 
         AppLogger.i(
             TAG,
-            "AudioFrameBus branch is ACTIVE"
+            "AudioFrameBus -> Whisper branch is ACTIVE"
         )
 
         AppLogger.i(TAG, "==================================================")
+
+        /*
+         * ---------------------------------------------------------
+         * Start capture thread
+         * ---------------------------------------------------------
+         */
 
         readThread =
             Thread {
@@ -251,10 +328,10 @@ internal class DirectAudioRecorderSession(
                 runCatching {
 
                     captureLoop(
-                        record,
-                        enc,
-                        mux,
-                        captureChannels
+                        record = record,
+                        enc = enc,
+                        mux = localMuxer,
+                        captureChannels = captureChannels
                     )
 
                 }.onFailure {
@@ -276,13 +353,13 @@ internal class DirectAudioRecorderSession(
 
             }.apply {
 
-                isDaemon = true
+                name =
+                    "direct-capture"
 
-                name = "direct-capture"
+                isDaemon =
+                    true
 
-            }.also {
-
-                it.start()
+                start()
             }
     }
 
@@ -299,14 +376,30 @@ internal class DirectAudioRecorderSession(
             "captureLoop() ENTER"
         )
 
+        /*
+         * Raw AudioRecord PCM.
+         */
         val pcm =
             ByteArray(
                 READ_CHUNK_BYTES
             )
 
+        /*
+         * Mono PCM at 48 kHz.
+         */
         val mono =
             ByteArray(
                 READ_CHUNK_BYTES / 2
+            )
+
+        /*
+         * Buffer for Whisper PCM at 16 kHz.
+         *
+         * 48 kHz -> 16 kHz = division by 3.
+         */
+        val whisperPcm =
+            ByteArray(
+                READ_CHUNK_BYTES / 3
             )
 
         val downmix =
@@ -314,9 +407,6 @@ internal class DirectAudioRecorderSession(
 
         val info =
             MediaCodec.BufferInfo()
-
-        var muxerStarted =
-            false
 
         var totalFrames =
             0L
@@ -334,7 +424,8 @@ internal class DirectAudioRecorderSession(
             0L
 
         val bytesPerFrame =
-            2 * ENCODE_CHANNELS
+            PCM_BYTES_PER_SAMPLE *
+                    ENCODE_CHANNELS
 
         while (!stopRequested.get()) {
 
@@ -346,7 +437,8 @@ internal class DirectAudioRecorderSession(
                 )
 
             /*
-             * AudioRecord.stop() can cause read() to return an error.
+             * AudioRecord.stop() can cause read() to fail.
+             *
              * If shutdown was requested, exit cleanly.
              */
             if (stopRequested.get()) {
@@ -375,9 +467,12 @@ internal class DirectAudioRecorderSession(
                 read.toLong()
 
             /*
-             * Convert stereo capture to mono when necessary.
+             * -----------------------------------------------------
+             * Convert capture PCM to mono if necessary.
+             * -----------------------------------------------------
              */
-            val (buf, len) =
+
+            val (encodeBuffer, encodeLength) =
                 if (downmix) {
 
                     mono to PcmDownmix.stereoToMono(
@@ -391,21 +486,43 @@ internal class DirectAudioRecorderSession(
                     pcm to read
                 }
 
+            if (encodeLength <= 0) {
+                continue
+            }
+
             /*
-             * =====================================================
-             * REAL AudioRecord PCM -> AudioFrameBus
-             * =====================================================
+             * -----------------------------------------------------
+             * STT branch
+             *
+             * Recording remains at 48 kHz.
+             *
+             * Whisper receives mono 16 kHz.
+             * -----------------------------------------------------
              */
-            if (len > 0) {
+
+            val whisperLength =
+                downsample48kTo16k(
+                    input = encodeBuffer,
+                    inputLength = encodeLength,
+                    output = whisperPcm
+                )
+
+            if (whisperLength > 0) {
 
                 AudioFrameBus.publish(
-                    buf,
-                    len
+                    whisperPcm,
+                    whisperLength
                 )
 
                 totalPublishedBytes +=
-                    len.toLong()
+                    whisperLength.toLong()
             }
+
+            /*
+             * -----------------------------------------------------
+             * Diagnostics
+             * -----------------------------------------------------
+             */
 
             if (readCount == 1L) {
 
@@ -413,7 +530,8 @@ internal class DirectAudioRecorderSession(
                     TAG,
                     "FIRST REAL PCM BUFFER RECEIVED: " +
                             "read=$read " +
-                            "published=$len " +
+                            "encode=$encodeLength " +
+                            "whisper=$whisperLength " +
                             "captureCh=$captureChannels"
                 )
             }
@@ -427,68 +545,41 @@ internal class DirectAudioRecorderSession(
                     "REAL PCM flowing: " +
                             "reads=$readCount " +
                             "pcmBytes=$totalPcmBytes " +
-                            "publishedBytes=$totalPublishedBytes " +
+                            "whisperBytes=$totalPublishedBytes " +
                             "busReceived=${AudioFrameBus.receivedCount()} " +
+                            "busConsumed=${AudioFrameBus.consumedCount()} " +
                             "busDropped=${AudioFrameBus.droppedCount()} " +
+                            "busQueue=${AudioFrameBus.queueSize()} " +
                             "errorReads=$errorReadCount"
                 )
             }
 
             /*
-             * Existing recording branch.
+             * -----------------------------------------------------
+             * Recording / encoder branch
+             * -----------------------------------------------------
              */
-            val inIdx =
-                enc.dequeueInputBuffer(
-                    DEQUEUE_TIMEOUT_US
-                )
 
-            if (inIdx >= 0) {
+            queueEncoderInput(
+                enc = enc,
+                data = encodeBuffer,
+                length = encodeLength,
+                totalFrames = totalFrames
+            )
 
-                val inBuf =
-                    enc.getInputBuffer(inIdx)
-                        ?: throw IllegalStateException(
-                            "Encoder input buffer is null"
-                        )
-
-                inBuf.clear()
-
-                if (len > 0) {
-
-                    inBuf.put(
-                        buf,
-                        0,
-                        len
-                    )
-                }
-
-                val ptsUs =
-                    totalFrames *
-                            1_000_000L /
-                            SAMPLE_RATE
-
-                enc.queueInputBuffer(
-                    inIdx,
-                    0,
-                    len,
-                    ptsUs,
-                    0
-                )
-
-                totalFrames +=
-                    len / bytesPerFrame
-            }
+            totalFrames +=
+                encodeLength / bytesPerFrame
 
             /*
-             * IMPORTANT:
-             * Drain encoder continuously during capture.
+             * Drain encoder continuously.
              */
-            muxerStarted =
-                drainEncoder(
-                    enc,
-                    mux,
-                    info,
-                    muxerStarted
-                )
+
+            drainEncoder(
+                enc = enc,
+                mux = mux,
+                info = info,
+                drainToEos = false
+            )
         }
 
         AppLogger.i(
@@ -496,33 +587,29 @@ internal class DirectAudioRecorderSession(
             "captureLoop stopping: " +
                     "reads=$readCount " +
                     "pcmBytes=$totalPcmBytes " +
-                    "publishedBytes=$totalPublishedBytes"
+                    "whisperBytes=$totalPublishedBytes"
         )
 
         /*
-         * Flush encoder.
+         * ---------------------------------------------------------
+         * Signal EOS to encoder.
+         * ---------------------------------------------------------
          */
-        val inIdx =
-            enc.dequeueInputBuffer(
-                END_OF_STREAM_TIMEOUT_US
-            )
 
-        if (inIdx >= 0) {
+        signalEncoderEos(
+            enc
+        )
 
-            enc.queueInputBuffer(
-                inIdx,
-                0,
-                0,
-                0,
-                MediaCodec.BUFFER_FLAG_END_OF_STREAM
-            )
-        }
+        /*
+         * ---------------------------------------------------------
+         * Drain until EOS.
+         * ---------------------------------------------------------
+         */
 
         drainEncoder(
-            enc,
-            mux,
-            info,
-            muxerStarted,
+            enc = enc,
+            mux = mux,
+            info = info,
             drainToEos = true
         )
 
@@ -532,40 +619,129 @@ internal class DirectAudioRecorderSession(
         )
     }
 
+    private fun queueEncoderInput(
+        enc: MediaCodec,
+        data: ByteArray,
+        length: Int,
+        totalFrames: Long
+    ) {
+
+        val inputIndex =
+            enc.dequeueInputBuffer(
+                DEQUEUE_TIMEOUT_US
+            )
+
+        if (inputIndex < 0) {
+            return
+        }
+
+        val inputBuffer =
+            enc.getInputBuffer(inputIndex)
+                ?: throw IllegalStateException(
+                    "Encoder input buffer is null"
+                )
+
+        inputBuffer.clear()
+
+        val writable =
+            minOf(
+                length,
+                inputBuffer.remaining()
+            )
+
+        if (writable > 0) {
+
+            inputBuffer.put(
+                data,
+                0,
+                writable
+            )
+        }
+
+        val ptsUs =
+            totalFrames *
+                    1_000_000L /
+                    CAPTURE_SAMPLE_RATE
+
+        enc.queueInputBuffer(
+            inputIndex,
+            0,
+            writable,
+            ptsUs,
+            0
+        )
+    }
+
+    private fun signalEncoderEos(
+        enc: MediaCodec
+    ) {
+
+        val deadline =
+            System.nanoTime() +
+                    EOS_INPUT_TIMEOUT_MS * 1_000_000L
+
+        while (System.nanoTime() < deadline) {
+
+            val inputIndex =
+                enc.dequeueInputBuffer(
+                    END_OF_STREAM_TIMEOUT_US
+                )
+
+            if (inputIndex >= 0) {
+
+                enc.queueInputBuffer(
+                    inputIndex,
+                    0,
+                    0,
+                    0,
+                    MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                )
+
+                AppLogger.i(
+                    TAG,
+                    "Encoder EOS queued"
+                )
+
+                return
+            }
+        }
+
+        AppLogger.w(
+            TAG,
+            "Unable to obtain encoder input buffer for EOS"
+        )
+    }
+
     private fun drainEncoder(
         enc: MediaCodec,
         mux: MediaMuxer,
         info: MediaCodec.BufferInfo,
-        muxerStartedIn: Boolean,
-        drainToEos: Boolean = false,
-    ): Boolean {
-
-        var muxerStarted =
-            muxerStartedIn
-
-        var track =
-            if (muxerStarted) 0 else -1
+        drainToEos: Boolean
+    ) {
 
         while (true) {
 
-            val outIdx =
+            val timeoutUs =
+                if (drainToEos) {
+                    END_OF_STREAM_TIMEOUT_US
+                } else {
+                    0L
+                }
+
+            val outputIndex =
                 enc.dequeueOutputBuffer(
                     info,
-                    if (drainToEos) {
-                        END_OF_STREAM_TIMEOUT_US
-                    } else {
-                        0
-                    }
+                    timeoutUs
                 )
 
             when {
 
-                outIdx ==
+                outputIndex ==
                         MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
 
                     if (!muxerStarted) {
 
-                        track =
+                        muxerTrack =
                             mux.addTrack(
                                 enc.outputFormat
                             )
@@ -577,72 +753,152 @@ internal class DirectAudioRecorderSession(
 
                         AppLogger.i(
                             TAG,
-                            "Muxer started: track=$track"
+                            "Muxer started: track=$muxerTrack"
                         )
                     }
                 }
 
-                outIdx ==
+                outputIndex ==
                         MediaCodec.INFO_TRY_AGAIN_LATER -> {
 
-                    return muxerStarted
+                    if (!drainToEos) {
+                        return
+                    }
+
+                    /*
+                     * During EOS draining, keep waiting.
+                     */
+                    continue
                 }
 
-                outIdx >= 0 -> {
+                outputIndex >= 0 -> {
 
-                    val outBuf =
-                        enc.getOutputBuffer(outIdx)
+                    val outputBuffer =
+                        enc.getOutputBuffer(
+                            outputIndex
+                        )
                             ?: throw IllegalStateException(
                                 "Encoder output buffer is null"
                             )
 
-                    val isConfig =
+                    val isCodecConfig =
                         info.flags and
                                 MediaCodec.BUFFER_FLAG_CODEC_CONFIG != 0
 
+                    if (isCodecConfig) {
+
+                        info.size = 0
+                    }
+
                     if (
-                        !isConfig &&
                         info.size > 0 &&
-                        muxerStarted
+                        muxerStarted &&
+                        muxerTrack >= 0
                     ) {
 
-                        outBuf.position(
+                        outputBuffer.position(
                             info.offset
                         )
 
-                        outBuf.limit(
-                            info.offset +
-                                    info.size
+                        outputBuffer.limit(
+                            info.offset + info.size
                         )
 
                         mux.writeSampleData(
-                            track,
-                            outBuf,
+                            muxerTrack,
+                            outputBuffer,
                             info
                         )
                     }
 
-                    val eos =
+                    val endOfStream =
                         info.flags and
                                 MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0
 
                     enc.releaseOutputBuffer(
-                        outIdx,
+                        outputIndex,
                         false
                     )
 
-                    if (eos) {
+                    if (endOfStream) {
 
                         AppLogger.i(
                             TAG,
                             "Encoder EOS received"
                         )
 
-                        return muxerStarted
+                        return
                     }
                 }
             }
         }
+    }
+
+    /**
+     * Downsample simple 48 kHz mono PCM16 -> 16 kHz mono PCM16.
+     *
+     * Le ratio est exactement 3:1.
+     *
+     * Pour une qualité maximale, un filtre passe-bas devrait être ajouté
+     * avant le sous-échantillonnage. Pour la transcription vocale,
+     * cette version simple constitue un point de départ fiable.
+     */
+    private fun downsample48kTo16k(
+        input: ByteArray,
+        inputLength: Int,
+        output: ByteArray
+    ): Int {
+
+        val inputSamples =
+            inputLength / PCM_BYTES_PER_SAMPLE
+
+        val outputSamples =
+            minOf(
+                inputSamples / WHISPER_DOWNSAMPLE_FACTOR,
+                output.size / PCM_BYTES_PER_SAMPLE
+            )
+
+        var outputByteIndex =
+            0
+
+        var outputSample =
+            0
+
+        while (outputSample < outputSamples) {
+
+            val inputSample =
+                outputSample *
+                        WHISPER_DOWNSAMPLE_FACTOR
+
+            val inputByteIndex =
+                inputSample *
+                        PCM_BYTES_PER_SAMPLE
+
+            if (
+                inputByteIndex + 1 >= inputLength
+            ) {
+                break
+            }
+
+            /*
+             * PCM little-endian:
+             *
+             * Copy one sample every 3 samples.
+             */
+
+            output[outputByteIndex] =
+                input[inputByteIndex]
+
+            output[outputByteIndex + 1] =
+                input[inputByteIndex + 1]
+
+            outputByteIndex +=
+                PCM_BYTES_PER_SAMPLE
+
+            outputSample++
+        }
+
+        return outputByteIndex
     }
 
     override fun stop() {
@@ -651,15 +907,21 @@ internal class DirectAudioRecorderSession(
         AppLogger.i(TAG, "Stopping DirectAudioRecorderSession")
 
         /*
+         * ---------------------------------------------------------
          * STEP 1:
          * Ask capture loop to terminate.
+         * ---------------------------------------------------------
          */
+
         stopRequested.set(true)
 
         /*
+         * ---------------------------------------------------------
          * STEP 2:
-         * Stop AudioRecord BEFORE joining the thread.
+         * Stop AudioRecord to unblock read().
+         * ---------------------------------------------------------
          */
+
         AppLogger.i(
             TAG,
             "Stopping AudioRecord to unblock read()"
@@ -678,9 +940,12 @@ internal class DirectAudioRecorderSession(
         }
 
         /*
+         * ---------------------------------------------------------
          * STEP 3:
          * Wait for capture thread.
+         * ---------------------------------------------------------
          */
+
         AppLogger.i(
             TAG,
             "Waiting for capture thread to finish"
@@ -709,15 +974,21 @@ internal class DirectAudioRecorderSession(
         }
 
         /*
+         * ---------------------------------------------------------
          * STEP 4:
-         * Stop PCM consumer.
+         * Stop Whisper worker.
+         * ---------------------------------------------------------
          */
-        AudioFrameTestWorker.stop()
+
+        WhisperTranscriptionWorker.stop()
 
         /*
+         * ---------------------------------------------------------
          * STEP 5:
          * Release AudioRecord.
+         * ---------------------------------------------------------
          */
+
         runCatching {
 
             audioRecord?.release()
@@ -733,9 +1004,14 @@ internal class DirectAudioRecorderSession(
         audioRecord = null
 
         /*
+         * ---------------------------------------------------------
          * STEP 6:
-         * Stop and release encoder.
+         * Release encoder.
+         *
+         * The capture thread already attempted to drain EOS.
+         * ---------------------------------------------------------
          */
+
         runCatching {
 
             encoder?.stop()
@@ -763,19 +1039,25 @@ internal class DirectAudioRecorderSession(
         encoder = null
 
         /*
+         * ---------------------------------------------------------
          * STEP 7:
-         * Stop and release muxer.
+         * Stop muxer only if it was actually started.
+         * ---------------------------------------------------------
          */
-        runCatching {
 
-            muxer?.stop()
+        if (muxerStarted) {
 
-        }.onFailure {
+            runCatching {
 
-            AppLogger.w(
-                TAG,
-                "Muxer.stop() failed: ${it.message}"
-            )
+                muxer?.stop()
+
+            }.onFailure {
+
+                AppLogger.w(
+                    TAG,
+                    "Muxer.stop() failed: ${it.message}"
+                )
+            }
         }
 
         runCatching {
@@ -792,10 +1074,16 @@ internal class DirectAudioRecorderSession(
 
         muxer = null
 
+        muxerStarted = false
+        muxerTrack = -1
+
         /*
+         * ---------------------------------------------------------
          * STEP 8:
          * Close output FD.
+         * ---------------------------------------------------------
          */
+
         runCatching {
 
             outFd.close()
@@ -827,10 +1115,12 @@ internal class DirectAudioRecorderSession(
         }
 
         runCatching {
-            readThread?.join(READ_JOIN_MS)
+            readThread?.join(
+                READ_JOIN_MS
+            )
         }
 
-        AudioFrameTestWorker.stop()
+        WhisperTranscriptionWorker.stop()
 
         runCatching {
             audioRecord?.release()
@@ -844,8 +1134,11 @@ internal class DirectAudioRecorderSession(
             encoder?.release()
         }
 
-        runCatching {
-            muxer?.stop()
+        if (muxerStarted) {
+
+            runCatching {
+                muxer?.stop()
+            }
         }
 
         runCatching {
@@ -856,6 +1149,9 @@ internal class DirectAudioRecorderSession(
         encoder = null
         muxer = null
         readThread = null
+
+        muxerStarted = false
+        muxerTrack = -1
     }
 
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
@@ -894,34 +1190,37 @@ internal class DirectAudioRecorderSession(
                         "channels=$channelName"
             )
 
-            val minBuf =
+            val minBufferSize =
                 AudioRecord.getMinBufferSize(
-                    SAMPLE_RATE,
+                    CAPTURE_SAMPLE_RATE,
                     channelMask,
                     AudioFormat.ENCODING_PCM_16BIT
                 )
 
-            if (minBuf <= 0) {
+            if (minBufferSize <= 0) {
 
                 AppLogger.w(
                     TAG,
                     "AudioRecord.getMinBufferSize() failed: " +
                             "channels=$channelName " +
-                            "minBuf=$minBuf"
+                            "minBuf=$minBufferSize"
                 )
 
                 continue
             }
 
             val requestedBuffer =
-                minBuf * BUFFER_FACTOR
+                maxOf(
+                    minBufferSize * BUFFER_FACTOR,
+                    READ_CHUNK_BYTES * BUFFER_FACTOR
+                )
 
-            val rec =
+            val record =
                 runCatching {
 
                     AudioRecord(
                         androidSource,
-                        SAMPLE_RATE,
+                        CAPTURE_SAMPLE_RATE,
                         channelMask,
                         AudioFormat.ENCODING_PCM_16BIT,
                         requestedBuffer
@@ -938,22 +1237,23 @@ internal class DirectAudioRecorderSession(
                 }.getOrNull()
 
             if (
-                rec != null &&
-                rec.state ==
+                record != null &&
+                record.state ==
                 AudioRecord.STATE_INITIALIZED
             ) {
 
                 AppLogger.i(
                     TAG,
                     "AudioRecord initialized: " +
-                            "channels=$channelName"
+                            "channels=$channelName " +
+                            "buffer=$requestedBuffer"
                 )
 
-                return rec to channels
+                return record to channels
             }
 
             runCatching {
-                rec?.release()
+                record?.release()
             }
         }
 
@@ -967,11 +1267,30 @@ internal class DirectAudioRecorderSession(
         private const val TAG =
             "CV:DirectCapture"
 
-        private const val SAMPLE_RATE =
+        /*
+         * Recording sample rate.
+         */
+        private const val CAPTURE_SAMPLE_RATE =
             48_000
+
+        /*
+         * Whisper worker sample rate.
+         */
+        private const val WHISPER_SAMPLE_RATE =
+            16_000
+
+        /*
+         * 48 kHz -> 16 kHz.
+         */
+        private const val WHISPER_DOWNSAMPLE_FACTOR =
+            CAPTURE_SAMPLE_RATE /
+                    WHISPER_SAMPLE_RATE
 
         private const val ENCODE_CHANNELS =
             1
+
+        private const val PCM_BYTES_PER_SAMPLE =
+            2
 
         private const val READ_CHUNK_BYTES =
             4096
@@ -988,6 +1307,9 @@ internal class DirectAudioRecorderSession(
         private const val END_OF_STREAM_TIMEOUT_US =
             100_000L
 
+        private const val EOS_INPUT_TIMEOUT_MS =
+            2_000L
+
         private const val READ_JOIN_MS =
             2_000L
 
@@ -999,7 +1321,9 @@ internal class DirectAudioRecorderSession(
             codec: ScrcpyAudioCodec
         ): Boolean {
 
-            if (source.androidAudioSource == null) {
+            if (
+                source.androidAudioSource == null
+            ) {
                 return false
             }
 
@@ -1011,7 +1335,7 @@ internal class DirectAudioRecorderSession(
                 hasEncoder(mime) &&
                         EncoderLimits.supportsFormat(
                             mime,
-                            SAMPLE_RATE,
+                            CAPTURE_SAMPLE_RATE,
                             ENCODE_CHANNELS
                         )
 
