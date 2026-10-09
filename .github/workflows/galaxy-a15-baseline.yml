@@ -36,6 +36,9 @@ jobs:
         with:
           cache-disabled: true
 
+      - name: Ensure Gradle wrapper is executable
+        run: chmod +x gradlew
+
       - name: Build debug APK
         run: ./gradlew assembleDebug --no-daemon --stacktrace
 
